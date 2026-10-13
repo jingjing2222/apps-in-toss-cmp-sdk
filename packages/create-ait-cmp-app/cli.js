@@ -146,7 +146,10 @@ async function templateFiles(root, options, prefix = '') {
         content = Buffer.from(`${JSON.stringify(json, null, 2)}\n`);
       }
       if (relative === '_yarn.lock') content = Buffer.from(content.toString('utf8').replaceAll('ait-cmp-template', options.project));
-      files.push({ relative: ({'_gitignore':'.gitignore','_yarn.lock':'yarn.lock','_yarnrc.yml':'.yarnrc.yml'})[relative] ?? relative, content, mode: (await lstat(path.join(root, relative))).mode & 0o777 });
+      const destination = relative.startsWith(`_github${path.sep}`)
+        ? `.github${relative.slice('_github'.length)}`
+        : ({'_gitignore':'.gitignore','_yarn.lock':'yarn.lock','_yarnrc.yml':'.yarnrc.yml'})[relative] ?? relative;
+      files.push({ relative: destination, content, mode: (await lstat(path.join(root, relative))).mode & 0o777 });
     }
   }
   return files;

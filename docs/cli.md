@@ -84,3 +84,5 @@ iOS에서는 macOS의 Xcode로 `iosApp` 안의 프로젝트를 엽니다. 실기
 `node --test packages/create-ait-cmp-app/test/cli.test.js`로 별도 테스트 데이터를 사용해 생성 CLI를 검사합니다. 배포 전에는 지원하는 타깃 조합별로 실제 포함된 템플릿에서 프로젝트를 생성하고 빌드해야 합니다.
 
 생성 앱에는 ESLint 설정, `.editorconfig`, Kotlin 린트 Gradle 작업이 포함됩니다. `yarn lint`는 JS·TS와 Kotlin·Gradle 스크립트를 검사하고, `yarn lint:fix`는 자동 수정합니다. Kotlin 검사에는 JDK 17이 필요합니다.
+
+생성 앱의 `.github/workflows/ci.yml`은 `main` 푸시와 `main` 대상 PR에서 JS·TS 린트, Kotlin·Gradle 린트, 공통 core JVM 테스트를 실행합니다. CLI 패키지에서는 `_github`로 보관한 뒤 생성 시 `.github`로 복원해 Yarn 패키징 누락을 막습니다. 서비스별 JS 테스트는 추가한 뒤 워크플로에 연결합니다.

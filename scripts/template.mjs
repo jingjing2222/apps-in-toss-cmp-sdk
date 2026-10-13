@@ -15,6 +15,13 @@ for(const file of ['LICENSE','.editorconfig','eslint.config.mjs','scripts/lint-k
   await cp(join(root,file),join(dest,file),{recursive:true});
 }
 await cp('.gitignore',join(dest,'_gitignore'));
+// Yarn pack omits .github; restore the directory name when scaffolding.
+await mkdir(join(dest,'_github/workflows'),{recursive:true});
+const ci=(await readFile('.github/workflows/ci.yml','utf8'))
+  .replace('      - name: JS 테스트\n        run: yarn test\n','')
+  .replace('name: JS 린트·테스트','name: JS 린트')
+  .replace(':sdk:jvmTest :sample:shared-core:jvmTest',':shared-core:jvmTest');
+await writeFile(join(dest,'_github/workflows/ci.yml'),ci);
 for(const module of ['shared-core','shared-ui','appsInTossApp','webApp','androidApp','iosApp']) {
   await cp(join(root,'sample',module),join(dest,module),{recursive:true,filter:p=>!p.split('/').some(s=>['build','.gradle','xcuserdata'].includes(s))});
 }
@@ -83,6 +90,8 @@ Node 24 이상, Corepack, JDK 17이 필요합니다. Yarn 4.18.1을 사용하며
 ## 코드 검사
 
 \`yarn lint\`로 JS·TS와 Kotlin·Gradle 스크립트를 검사하고, \`yarn lint:fix\`로 자동 수정합니다. Kotlin 검사에는 JDK 17이 필요합니다.
+
+생성된 \`.github/workflows/ci.yml\`은 main 푸시와 main 대상 PR에서 JS·TS 린트, Kotlin 린트·공통 core JVM 테스트를 실행합니다.
 
 ## 선택한 플랫폼 실행
 

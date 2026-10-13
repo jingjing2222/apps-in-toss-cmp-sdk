@@ -24,6 +24,8 @@ async function fixture(t) {
   await writeFile(path.join(template, 'project.pbxproj'), 'title = "__DISPLAY_NAME__";');
   await writeFile(path.join(template, 'title.properties'), 'title=__DISPLAY_NAME__');
   await writeFile(path.join(template, '_yarnrc.yml'), 'nodeLinker: node-modules\n');
+  await mkdir(path.join(template, '_github/workflows'), { recursive: true });
+  await writeFile(path.join(template, '_github/workflows/ci.yml'), 'name: CI\n');
   await writeFile(path.join(template, '_gitignore'), 'node_modules/\n');
   await writeFile(path.join(template, 'gradlew'), '#!/bin/sh\n', { mode: 0o755 });
   const binary = Buffer.from([0, 255, 32, 128]);
@@ -43,6 +45,8 @@ test('default generation preserves binary and executable, updates npm names and 
   const root = path.join(f.cwd, 'my-app');
   const json = JSON.parse(await readFile(path.join(root, 'package.json')));
   assert.equal(json.name, 'my-app');
+  assert.equal(await readFile(path.join(root, '.github/workflows/ci.yml'), 'utf8'), 'name: CI\n');
+  assert.equal((await readdir(root)).includes('_github'), false);
   assert.match(await readFile(path.join(root, 'App.kt'), 'utf8'), /import io\.example\.myapp\.Model\nimport io\.github\.sdk\.Client/);
   assert.equal(await readFile(path.join(root, '.gitignore'), 'utf8'), 'node_modules/\n');
   assert.equal(json.scripts['dev:web'], undefined);

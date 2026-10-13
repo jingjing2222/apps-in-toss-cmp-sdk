@@ -59,3 +59,12 @@ ESLint 10.12.0, typescript-eslint 8.71.1, ktlint 1.8.0을 적용했습니다. ty
 `yarn lint`로 저장소의 JS·TS와 모든 Kotlin·Gradle 스크립트를 검사했습니다. Android 내장 Kotlin 플러그인 여부와 관계없이 소스 파일을 검사하며, 루트 Gradle `check`에도 Kotlin 검사를 연결했습니다. 기존 위반은 수정했고, Compose 함수명·기존 와일드카드 import를 허용합니다. Kotlin import는 사전순으로 정렬합니다.
 
 미사용 JS 변수와 Kotlin 공백 위반을 임시로 넣어 두 검사 모두 0이 아닌 종료 코드로 실패하는 것을 확인하고 임시 파일을 제거했습니다. Node 테스트 26개, Kotlin 테스트 8개, Android debug 빌드, 앱인토스 JS/Wasm 컴파일이 통과했습니다. 실제 CLI 압축 패키지에서 생성한 앱인토스 전용 앱과 전체 타깃 앱도 첫 `yarn lint`를 통과했습니다. 기본 생성 앱은 Android SDK 환경 변수 없이 검사했습니다. 패키지명 치환 후 import 순서를 유지하는 회귀 검사를 CLI 테스트에 포함했습니다. Windows·기기 실행·iOS 빌드는 이번 린터 작업에서 반복하지 않았습니다.
+
+
+## GitHub Actions CI
+
+`.github/workflows/ci.yml`은 `main` 푸시와 `main` 대상 PR에서 JS·Kotlin 작업을 병렬 실행합니다. JS는 Node 24·Yarn 4의 immutable 설치 후 린트와 브리지·CLI 테스트를 실행합니다. Kotlin은 JDK 17·저장소의 Gradle Wrapper로 ktlint와 SDK·공통 core JVM 테스트를 실행합니다. Ubuntu 24.04 러너의 Android SDK는 프로젝트 구성에 사용하며, Android·iOS 빌드와 브라우저 테스트는 실행하지 않습니다.
+
+작업 제한 시간, 같은 ref의 중복 실행 취소, 읽기 전용 저장소 권한, 액션 SHA 고정, PR의 Gradle 캐시 읽기 전용 사용을 설정했습니다. Gradle 캐시는 basic 제공자를 사용합니다. 생성 앱에는 JS 린트와 공통 core JVM 테스트에 맞춘 워크플로를 포함합니다.
+
+`actionlint`로 저장소·템플릿·실제 생성 앱 워크플로를 검사했습니다. 로컬에서 CI의 JS 린트·Node 테스트 26개와 Kotlin 린트·JVM 테스트 8개를 확인했고, 압축 CLI에서 `.github/workflows/ci.yml`이 복원되는 것을 확인했습니다. 실제 실행 상태는 저장소의 Actions 탭에서 확인할 수 있습니다.
