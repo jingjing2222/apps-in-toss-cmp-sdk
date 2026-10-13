@@ -6,7 +6,7 @@
 
 `shared-core`에 서비스 모델·API 클라이언트·저장 계약을, `shared-ui`에 공통 화면을 둡니다. `appsInTossApp`은 토스 연동을 담당합니다. 선택한 타깃의 호스트 디렉터리, Gradle Wrapper, Yarn 잠금 파일, 린트 설정, 기본 GitHub Actions CI를 포함합니다.
 
-정식 배포 템플릿은 CLI와 같은 버전의 SDK를 Maven Central에서 가져옵니다. 로컬 개발 템플릿은 `yarn template`으로 생성한 미배포 SDK를 `vendor/maven`에 포함합니다. SDK 구현 소스는 앱 소스로 복사하지 않습니다.
+생성 앱은 CLI와 같은 버전의 SDK를 Maven Central에서 가져옵니다.
 
 ## 사용
 
@@ -28,4 +28,4 @@ node packages/create-ait-cmp-app/cli.js my-app --yes   --package io.example.myap
 
 `--skip-install`로 설치를 생략할 수 있습니다. 기본 설치는 프로젝트에 지정한 Yarn 4의 `install --immutable`을 사용합니다. 기존 파일·비어 있지 않은 경로·심볼릭 링크를 보호하며 덮어쓰기 옵션은 제공하지 않습니다.
 
-Git 초기화·커밋·앱인토스 콘솔 등록·배포·네이티브 도구 설치는 수행하지 않습니다. 생성 앱의 README는 앱 구성을, 개발 가이드는 실행·검사·CI 방법을 안내합니다. [전체 옵션과 입력 규칙](https://github.com/l2hyunwoo/apps-in-toss-cmp-sdk/blob/main/docs/cli.md)을 참고하세요.
+Git 초기화·커밋·앱인토스 콘솔 등록·배포·네이티브 도구 설치는 수행하지 않습니다. 생성 앱의 README는 앱 구성을, 개발 가이드는 실행·검사·CI 방법을 안내합니다. 전체 옵션은 `yarn dlx create-ait-cmp-app@alpha --help`로 확인합니다.

@@ -30,18 +30,7 @@ Compose Multiplatform(CMP)으로 앱인토스 웹앱을 만들고, 서비스가 
 
 공통 UI는 Compose Material 3을 사용합니다. TDS 패키지·폰트·에셋은 포함하지 않으며, TDS가 필요한 화면은 사용 조건을 확인한 뒤 앱인토스 호스트에 한정해야 합니다. 예제의 한글 폰트는 SIL Open Font License의 Noto Sans KR입니다.
 
-실제 토스앱의 인증·WebView 동작·검수는 별도 검증이 필요합니다. 구현한 범위와 확인한 환경은 [호환성](docs/compatibility.md)과 [검증 결과](docs/validation.md)에 기록했습니다.
-
-## 문서
-
-[문서 안내](docs/index.md)에서 목적에 맞는 가이드를 찾을 수 있습니다.
-
-- [시작하기](docs/getting-started.md): 예제 실행과 프로젝트 생성
-- [공유 구조](docs/architecture.md): 공통 코드와 호스트의 경계
-- [CLI 사용법](docs/cli.md): 옵션·입력 규칙·생성 후 작업
-- [네이티브 연동](docs/native.md): Android·iOS에서 화면 사용
-- [개발 가이드](docs/development.md): 린트·테스트·CI·템플릿 유지보수
-- [출시 준비](docs/release.md): 앱인토스 배포와 패키지 배포 전 확인 사항
+실제 토스앱의 인증·WebView 동작·검수는 별도 검증이 필요합니다.
 
 ## 라이선스
 
