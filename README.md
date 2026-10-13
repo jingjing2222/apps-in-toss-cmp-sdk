@@ -26,7 +26,7 @@ Compose Multiplatform(CMP)으로 앱인토스 웹앱을 만들고, 서비스가 
 
 ## 현재 제공 범위
 
-비공식 초기 구현이며 npm·Maven에 배포하지 않았습니다. Kotlin SDK의 앱인토스 연동 대상은 JS·Wasm입니다. Android·iOS 예제는 공통 화면과 서비스 로직을 재사용합니다.
+`1.0.0-alpha01` 출시 준비 중인 비공식 초기 구현이며 npm·Maven에 아직 게시하지 않았습니다. Kotlin SDK의 앱인토스 연동 대상은 JS·Wasm입니다. Android·iOS 예제는 공통 화면과 서비스 로직을 재사용합니다.
 
 공통 UI는 Compose Material 3을 사용합니다. TDS 패키지·폰트·에셋은 포함하지 않으며, TDS가 필요한 화면은 사용 조건을 확인한 뒤 앱인토스 호스트에 한정해야 합니다. 예제의 한글 폰트는 SIL Open Font License의 Noto Sans KR입니다.
 

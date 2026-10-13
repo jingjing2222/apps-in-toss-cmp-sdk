@@ -2,12 +2,12 @@
 
 `create-ait-cmp-app`은 앱인토스를 지원하는 Compose Multiplatform 프로젝트를 생성합니다. Node.js 24 이상과 Corepack이 필요합니다. 생성 앱은 Yarn 4.18.1을 사용합니다. `corepack enable`로 yarn 명령을 활성화합니다. npm 패키지에 템플릿과 Gradle Wrapper를 포함하며, 생성할 때 Git 브랜치에서 템플릿을 내려받지 않습니다.
 
-아직 npm에 배포하지 않았습니다. 아래 `yarn dlx` 명령은 같은 이름으로 패키지를 배포한 뒤 사용할 수 있습니다. 로컬 저장소에서는 `yarn dlx create-ait-cmp-app` 대신 `node packages/create-ait-cmp-app/cli.js`를 사용합니다.
+아직 npm에 배포하지 않았습니다. 아래 `yarn dlx` 명령은 같은 이름으로 패키지를 배포한 뒤 사용할 수 있습니다. 로컬 저장소에서는 먼저 `yarn template`으로 미배포 SDK를 생성한 뒤 `node packages/create-ait-cmp-app/cli.js`를 사용합니다.
 
 ## 대화형 생성
 
 ```sh
-yarn dlx create-ait-cmp-app my-app
+yarn dlx create-ait-cmp-app@alpha my-app
 ```
 
 생성 CLI는 타깃·Kotlin 패키지·앱인토스 appName·표시 이름을 입력받고, 파일 생성 전에 요약을 보여줍니다. `yes`를 입력하면 생성하고, 확인 입력을 비워 두면 취소합니다. 옵션으로 제공한 값은 다시 묻지 않으며 잘못된 입력은 같은 질문에서 수정할 수 있습니다. 확인 전에 Ctrl+C를 누르면 파일을 만들지 않고 취소합니다.
@@ -15,7 +15,7 @@ yarn dlx create-ait-cmp-app my-app
 앱인토스는 필수 타깃이며 기본으로 선택하는 유일한 타깃입니다. 다른 호스트도 필요하면 질문에서 선택하거나 `--targets`로 지정합니다.
 
 ```sh
-yarn dlx create-ait-cmp-app my-app --targets apps-in-toss,android,ios,web
+yarn dlx create-ait-cmp-app@alpha my-app --targets apps-in-toss,android,ios,web
 ```
 
 선택하지 않은 호스트의 디렉터리는 생성하지 않습니다. 공통 Gradle 모듈은 생성된 호스트 디렉터리를 기준으로 플랫폼 타깃을 활성화합니다. 로컬 개발 템플릿은 JS 리소스를 포함한 SDK Maven 바이너리를 생성 앱에 포함합니다. 정식 npm 배포 템플릿은 같은 버전의 Maven Central 좌표를 사용하므로 `vendor/`가 없습니다. SDK 구현 소스는 앱 소스로 복사하지 않습니다. 배포 대상과 절차는 [출시 준비](release.md)를 참고하세요.
@@ -25,7 +25,7 @@ yarn dlx create-ait-cmp-app my-app --targets apps-in-toss,android,ios,web
 터미널 입력이 없는 환경에서는 `--yes`, 생성 경로, 세 가지 메타데이터 옵션을 모두 지정합니다.
 
 ```sh
-yarn dlx create-ait-cmp-app my-app --yes \
+yarn dlx create-ait-cmp-app@alpha my-app --yes \
   --package io.example.myapp \
   --app-name my-app \
   --display-name '내 앱' \

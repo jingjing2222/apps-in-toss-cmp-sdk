@@ -6,21 +6,23 @@
 
 `shared-core`에 서비스 모델·API 클라이언트·저장 계약을, `shared-ui`에 공통 화면을 둡니다. `appsInTossApp`은 토스 연동을 담당합니다. 선택한 타깃의 호스트 디렉터리, Gradle Wrapper, Yarn 잠금 파일, 린트 설정, 기본 GitHub Actions CI를 포함합니다.
 
-정식 배포 템플릿은 CLI와 같은 버전의 SDK를 Maven Central에서 가져옵니다. 로컬 개발 템플릿은 미배포 SDK를 `vendor/maven`에 포함합니다. SDK 구현 소스는 앱 소스로 복사하지 않습니다.
+정식 배포 템플릿은 CLI와 같은 버전의 SDK를 Maven Central에서 가져옵니다. 로컬 개발 템플릿은 `yarn template`으로 생성한 미배포 SDK를 `vendor/maven`에 포함합니다. SDK 구현 소스는 앱 소스로 복사하지 않습니다.
 
 ## 사용
 
 Node 24 이상과 Corepack이 필요합니다. 현재 npm 미배포 상태이므로 저장소 루트에서 실행합니다.
 
 ```sh
+yarn template
 node packages/create-ait-cmp-app/cli.js my-app
 ```
 
-배포 후에는 `yarn dlx create-ait-cmp-app my-app`으로 사용할 수 있습니다. 타깃·Kotlin 패키지·콘솔 appName·표시 이름을 질문하고, 생성 전에 요약과 확인을 받습니다. 기본 타깃은 앱인토스만 선택합니다.
+배포 후에는 `yarn dlx create-ait-cmp-app@alpha my-app`으로 사용할 수 있습니다. 타깃·Kotlin 패키지·콘솔 appName·표시 이름을 질문하고, 생성 전에 요약과 확인을 받습니다. 기본 타깃은 앱인토스만 선택합니다.
 
 자동화 환경에서는 입력값을 명시합니다.
 
 ```sh
+yarn template
 node packages/create-ait-cmp-app/cli.js my-app --yes   --package io.example.myapp --app-name my-app   --display-name '내 앱' --targets apps-in-toss,android,ios,web
 ```
 

@@ -50,6 +50,7 @@ yarn build:web
 현재 CLI는 미배포 상태입니다. 저장소에 포함된 템플릿으로 생성합니다.
 
 ```sh
+yarn template
 node packages/create-ait-cmp-app/cli.js my-app
 ```
 

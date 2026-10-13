@@ -46,9 +46,9 @@ SDK나 샘플 앱·생성 문서를 수정하면 실행합니다.
 yarn template
 ```
 
-[scripts/template.mjs](../scripts/template.mjs)는 JS 리소스를 포함한 SDK 바이너리를 준비하고 샘플 모듈을 `packages/create-ait-cmp-app/templates/app`에 복사합니다. 생성 앱의 루트 README와 개발 가이드는 이 스크립트가 작성합니다. 템플릿 사본만 수정하면 다음 갱신 때 사라집니다.
+[scripts/template.mjs](../scripts/template.mjs)는 JS 리소스를 포함한 SDK 바이너리를 준비하고 샘플 모듈을 `packages/create-ait-cmp-app/templates/app`에 복사합니다. 생성 앱의 루트 README와 개발 가이드는 이 스크립트가 작성합니다. 로컬 Maven 바이너리는 Git에서 제외하므로 clone 후 CLI를 직접 실행하거나 압축하기 전에 `yarn template`을 실행합니다. 템플릿 사본만 수정하면 다음 갱신 때 사라집니다.
 
-정식 버전의 배포물 검사는 `yarn release:prepare 0.1.0`을 사용합니다. 이 명령의 템플릿에는 `vendor/`가 없으며 실행 후 `yarn template`으로 로컬 개발 템플릿을 복원합니다. 배포 대상·인증 설정·CD 트리거는 [출시 준비](release.md)를 참고하세요.
+배포물 검사는 `yarn release:prepare 1.0.0-alpha01`을 사용합니다. 이 명령의 템플릿에는 `vendor/`가 없으며 실행 후 `yarn template`으로 로컬 개발 템플릿을 복원합니다. 배포 대상·인증 설정·CD 트리거는 [출시 준비](release.md)를 참고하세요.
 
 템플릿에는 정해진 필드에서만 `__PROJECT_NAME__`, `__PACKAGE_NAME__`, `__APP_NAME__`, `__DISPLAY_NAME__` 토큰을 사용합니다. 소스·JSON은 큰따옴표 문자열, XML·plist는 텍스트나 속성값에 둡니다. 파일 확장자별로 CLI가 대체 값을 이스케이프합니다.
 

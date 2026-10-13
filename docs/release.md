@@ -37,10 +37,10 @@ Maven publication은 소스·Javadoc JAR와 POM·Gradle 메타데이터를 함�
 [Package release](../.github/workflows/release.yml)는 다음처럼 동작합니다.
 
 - 배포 관련 변경의 main 대상 PR: 배포물 생성·검사만 실행합니다.
-- 수동 실행: 입력한 `0.1.0` 형태의 정식 버전으로 검사하고 npm·Maven 압축 파일을 보관합니다. 업로드하지 않습니다.
-- `v0.1.0` 형태의 태그 푸시: 태그 커밋이 main 이력에 포함되는지 검사한 뒤 Maven Central, npm 순서로 게시합니다.
+- 수동 실행: 입력한 `1.0.0-alpha01` 형태의 버전으로 검사하고 npm·Maven 압축 파일을 보관합니다. 업로드하지 않습니다.
+- `v1.0.0-alpha01` 형태의 태그 푸시: 태그 커밋이 main 이력에 포함되는지 검사한 뒤 Maven Central, npm 순서로 게시합니다.
 
-두 패키지는 태그에서 같은 버전을 사용합니다. prerelease와 SNAPSHOT의 원격 배포는 구성하지 않았습니다. main 일반 푸시에는 기존 CI만 실행됩니다. 배포 도중 새 태그가 들어와도 진행 중 배포를 취소하지 않습니다.
+두 패키지는 태그에서 같은 버전을 사용합니다. `1.0.0-alpha01`은 npm의 `alpha` 채널로 게시합니다. `-betaNN`·`-rcNN`은 각각 `beta`·`rc`, 안정 버전은 `latest`를 사용합니다. SNAPSHOT 원격 배포는 구성하지 않았습니다. main 일반 푸시에는 기존 CI만 실행됩니다. 배포 도중 새 태그가 들어와도 진행 중 배포를 취소하지 않습니다.
 
 배포물 검사는 린트·테스트, Maven POM 필수 필드·소스·Javadoc·브리지 파일, CLI 압축·프로젝트 생성·immutable 설치·리소스 연결을 확인합니다. 공개 전 SDK는 검사 전용 로컬 저장소로 연결합니다. 실제 npm 배포물에는 이 저장소를 넣지 않습니다.
 
@@ -78,9 +78,9 @@ npm 패키지 이름 `create-ait-cmp-app`의 게시 권한을 확보해야 합�
 Node 24·Yarn 4·JDK 17 환경에서 실행합니다.
 
 ```sh
-yarn release:prepare 0.1.0
+yarn release:prepare 1.0.0-alpha01
 ```
 
-`build/create-ait-cmp-app-0.1.0.tgz`와 `build/template-maven`에 배포물을 만듭니다. 업로드·서명은 하지 않습니다. CLI manifest의 버전은 압축하는 동안만 바꾸고 복원하지만 템플릿은 정식 버전용으로 갱신됩니다. 로컬 개발 템플릿으로 돌아가려면 `yarn template`을 실행합니다.
+`build/create-ait-cmp-app-1.0.0-alpha01.tgz`와 `build/template-maven`에 배포물을 만듭니다. 업로드·서명은 하지 않습니다. CLI manifest의 버전은 압축하는 동안만 바꾸고 복원하지만 템플릿은 정식 버전용으로 갱신됩니다. 로컬 개발 템플릿으로 돌아가려면 `yarn template`을 실행합니다.
 
-로컬 개발 템플릿에는 미배포 SDK를 사용하는 `vendor/maven`을 유지합니다. 정식 npm 배포 템플릿은 같은 버전의 원격 Maven 좌표를 사용합니다. 생성 앱 자체에는 Central 게시 토큰이나 서명 키가 필요하지 않습니다.
+로컬 개발 템플릿의 `vendor/maven`은 `yarn template`으로 생성하며 Git에는 보관하지 않습니다. 정식 npm 배포 템플릿은 같은 버전의 원격 Maven 좌표를 사용합니다. 생성 앱 자체에는 Central 게시 토큰이나 서명 키가 필요하지 않습니다.
