@@ -1,0 +1,38 @@
+{
+  "name": "apps-in-toss-cmp-sdk",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/web-bridge",
+    "packages/create-ait-cmp-app"
+  ],
+  "scripts": {
+    "test": "node scripts/check-boundaries.mjs && node --test packages/web-bridge/test/*.test.mjs && yarn workspace create-ait-cmp-app test",
+    "dev": "node scripts/web.mjs dev",
+    "dev:toss": "node scripts/web.mjs dev:toss",
+    "build": "node scripts/web.mjs build",
+    "dev:web": "node scripts/web.mjs dev:web",
+    "build:web": "node scripts/web.mjs build:web",
+    "template": "node scripts/template.mjs",
+    "lint": "yarn lint:js && yarn lint:kotlin",
+    "lint:js": "eslint . --max-warnings=0",
+    "lint:kotlin": "node scripts/lint-kotlin.mjs",
+    "lint:fix": "yarn lint:js --fix && yarn lint:kotlin --fix"
+  },
+  "dependencies": {
+    "@apps-in-toss/web-framework": "3.8.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "globals": "17.13.0",
+    "toss-sdk-min": "npm:@apps-in-toss/web-framework@3.0.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1"
+  },
+  "packageManager": "yarn@4.18.1"
+}
