@@ -10,6 +10,27 @@
   <artifactId>apps-in-toss-sdk-js</artifactId>
   <version>0.1.0-SNAPSHOT</version>
   <packaging>klib</packaging>
+  <name>Apps in Toss Compose Multiplatform SDK</name>
+  <description>Kotlin JS and Wasm APIs for Apps in Toss, including internal JavaScript bridge resources.</description>
+  <url>https://github.com/l2hyunwoo/apps-in-toss-cmp-sdk</url>
+  <licenses>
+    <license>
+      <name>MIT License</name>
+      <url>https://opensource.org/license/mit</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>l2hyunwoo</id>
+      <name>l2hyunwoo</name>
+      <url>https://github.com/l2hyunwoo</url>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/l2hyunwoo/apps-in-toss-cmp-sdk.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/l2hyunwoo/apps-in-toss-cmp-sdk.git</developerConnection>
+    <url>https://github.com/l2hyunwoo/apps-in-toss-cmp-sdk</url>
+  </scm>
   <dependencies>
     <dependency>
       <groupId>org.jetbrains.kotlin</groupId>
