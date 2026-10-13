@@ -41,7 +41,7 @@ yarn dlx create-ait-cmp-app my-app --yes \
 | `--display-name <name>` | 앱 표시 이름 설정 |
 | `--targets <list>` | `apps-in-toss,android,ios,web` 중 타깃을 쉼표로 구분해 선택 |
 | `--yes` | 메타데이터를 명시적으로 받고 질문 생략 |
-| `--skip-install` | npm 의존성을 설치하지 않고 파일만 생성 |
+| `--skip-install` | Yarn 의존성을 설치하지 않고 파일만 생성 |
 | `--help` | 명령 사용법 출력 |
 | `--version` | 생성 CLI 버전 출력 |
 
@@ -73,19 +73,8 @@ Android에서는 JDK 17과 Android SDK를 설치한 뒤 실행합니다.
 
 iOS에서는 macOS의 Xcode로 `iosApp` 안의 프로젝트를 엽니다. 실기기 빌드 전에 서명 팀을 설정해야 합니다. 독립 웹 타깃은 `yarn dev:web`과 `yarn build:web`을 사용하며, 운영 빌드에 토스 SDK나 브라우저 mock을 포함하지 않습니다. 생성 CLI는 JDK·Android SDK·Xcode 등 플랫폼 도구를 설치하지 않습니다.
 
-## 템플릿 유지보수
+## 생성 앱 문서와 CI
 
-배포 패키지는 Wrapper와 잠금 파일을 포함한 `packages/create-ait-cmp-app/templates/app`을 담습니다. 정해진 메타데이터 필드에서만 `__PROJECT_NAME__`, `__PACKAGE_NAME__`, `__APP_NAME__`, `__DISPLAY_NAME__` 토큰을 사용합니다.
+생성 앱의 README는 앱 기능과 공통 모듈을 설명합니다. `docs/development.md`에서 실행·검사·CI·플랫폼 추가 방법을 안내합니다. `.github/workflows/ci.yml`은 main 푸시·main 대상 PR에서 JS·TS 린트, Kotlin·Gradle 린트, 공통 core JVM 테스트를 실행합니다. 서비스별 JS 테스트는 추가한 뒤 연결합니다.
 
-소스 코드와 JSON의 토큰은 큰따옴표 문자열 안에 둡니다. XML·plist에서는 텍스트나 속성값에 둡니다. 작은따옴표 문자열·템플릿 리터럴·따옴표 없는 Xcode 필드에는 소스 토큰을 넣지 않습니다. 생성 CLI는 파일 확장자에 맞게 대체 값을 이스케이프합니다.
-
-생성 CLI는 npm 루트 이름을 갱신하고, 웹 타깃이 없으면 웹용 Yarn 스크립트를 제거합니다. Wrapper의 바이트와 실행 권한은 보존합니다. 템플릿의 설정 파일은 `_gitignore`·`_yarnrc.yml`·`_yarn.lock`으로 보관하고 생성할 때 `.gitignore`·`.yarnrc.yml`·`yarn.lock`으로 복원합니다. Yarn 패키징에서 설정 파일이 빠지는 일을 막으며, `publishConfig.executableFiles`로 Gradle Wrapper 실행 권한을 유지합니다.
-
-`node --test packages/create-ait-cmp-app/test/cli.test.js`로 별도 테스트 데이터를 사용해 생성 CLI를 검사합니다. 배포 전에는 지원하는 타깃 조합별로 실제 포함된 템플릿에서 프로젝트를 생성하고 빌드해야 합니다.
-
-생성 앱에는 ESLint 설정, `.editorconfig`, Kotlin 린트 Gradle 작업이 포함됩니다. `yarn lint`는 JS·TS와 Kotlin·Gradle 스크립트를 검사하고, `yarn lint:fix`는 자동 수정합니다. Kotlin 검사에는 JDK 17이 필요합니다.
-
-생성 앱의 `.github/workflows/ci.yml`은 `main` 푸시와 `main` 대상 PR에서 JS·TS 린트, Kotlin·Gradle 린트, 공통 core JVM 테스트를 실행합니다. CLI 패키지에서는 `_github`로 보관한 뒤 생성 시 `.github`로 복원해 Yarn 패키징 누락을 막습니다. 서비스별 JS 테스트는 추가한 뒤 워크플로에 연결합니다.
-
-
-SDK 저장소의 `Generated app CI`는 앱인토스 전용·전체 타깃 두 조합을 실제 배포용 CLI 압축 패키지에서 생성합니다. 자동 설치 후 워크플로 복원, JS·TS 린트, Kotlin·Gradle 린트, 공통 core JVM 테스트를 확인합니다. 생성 앱의 CI가 템플릿·패키징 변경으로 깨지는 것을 PR에서 검출하기 위한 검사입니다.
+템플릿을 수정하거나 배포용 CLI를 검증하려면 [개발 가이드](development.md)를 참고하세요.
