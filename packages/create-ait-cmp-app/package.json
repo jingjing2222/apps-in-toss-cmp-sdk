@@ -1,0 +1,24 @@
+{
+  "name": "create-ait-cmp-app",
+  "version": "0.1.0",
+  "description": "Create a Compose Multiplatform app for Apps in Toss",
+  "type": "module",
+  "bin": "cli.js",
+  "engines": {
+    "node": ">=24"
+  },
+  "files": [
+    "cli.js",
+    "templates"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "executableFiles": [
+      "cli.js",
+      "templates/app/gradlew"
+    ]
+  }
+}

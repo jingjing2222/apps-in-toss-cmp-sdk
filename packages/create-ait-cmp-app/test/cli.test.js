@@ -1,0 +1,224 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, mkdir, writeFile, readFile, readdir, symlink, lstat, rm } from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { run, parseArgs, validate } from '../cli.js';
+
+const args = ['my-app', '--yes', '--package', 'io.example.myapp', '--app-name', 'my-app', '--display-name', '내 앱', '--skip-install'];
+async function fixture(t) {
+  const temp = await mkdtemp(path.join(os.tmpdir(), 'ait-cli-'));
+  // Resolve the platform temp directory before testing explicit symlink protection.
+  const { realpath } = await import('node:fs/promises');
+  const cwd = await realpath(temp);
+  t.after(() => rm(cwd, { recursive: true, force: true }));
+  const template = path.join(cwd, 'template');
+  await mkdir(template);
+  await writeFile(path.join(template, 'package.json'), JSON.stringify({ name: '__PROJECT_NAME__', scripts: { dev: 'vite', 'dev:web': 'web', 'build:web': 'web' }, title: '__DISPLAY_NAME__' }));
+  await writeFile(path.join(template, '_yarn.lock'), '"ait-cmp-template@workspace:.":\n  resolution: "ait-cmp-template@workspace:."\n  locator: "ait-cmp-template%40workspace%3A."\n');
+  await writeFile(path.join(template, 'App.kt'), 'package __PACKAGE_NAME__\n\nimport io.github.sdk.Client\nimport __PACKAGE_NAME__.Model\n\nval title = "__DISPLAY_NAME__"\n');
+  await writeFile(path.join(template, 'Info.plist'), '<string>__DISPLAY_NAME__</string>');
+  await writeFile(path.join(template, 'Title.swift'), 'let title = "__DISPLAY_NAME__"');
+  await writeFile(path.join(template, 'project.pbxproj'), 'title = "__DISPLAY_NAME__";');
+  await writeFile(path.join(template, 'title.properties'), 'title=__DISPLAY_NAME__');
+  await writeFile(path.join(template, '_yarnrc.yml'), 'nodeLinker: node-modules\n');
+  await writeFile(path.join(template, '_gitignore'), 'node_modules/\n');
+  await writeFile(path.join(template, 'gradlew'), '#!/bin/sh\n', { mode: 0o755 });
+  const binary = Buffer.from([0, 255, 32, 128]);
+  await writeFile(path.join(template, 'wrapper.jar'), binary);
+  for (const dir of ['androidApp', 'iosApp', 'webApp']) {
+    await mkdir(path.join(template, dir));
+    await writeFile(path.join(template, dir, 'README.md'), dir);
+  }
+  let output = '';
+  const context = { cwd, template, input: { isTTY: false }, output: { write: text => { output += text; } } };
+  return { cwd, template, context, output: () => output, binary };
+}
+
+test('default generation preserves binary and executable, updates npm names and excludes optional targets', async t => {
+  const f = await fixture(t);
+  assert.equal(await run(args, f.context), 0);
+  const root = path.join(f.cwd, 'my-app');
+  const json = JSON.parse(await readFile(path.join(root, 'package.json')));
+  assert.equal(json.name, 'my-app');
+  assert.match(await readFile(path.join(root, 'App.kt'), 'utf8'), /import io\.example\.myapp\.Model\nimport io\.github\.sdk\.Client/);
+  assert.equal(await readFile(path.join(root, '.gitignore'), 'utf8'), 'node_modules/\n');
+  assert.equal(json.scripts['dev:web'], undefined);
+  const lock = await readFile(path.join(root, 'yarn.lock'), 'utf8');
+  assert.equal(await readFile(path.join(root, '.yarnrc.yml'), 'utf8'), 'nodeLinker: node-modules\n');
+  assert.match(lock, /my-app@workspace:\./);
+  assert.doesNotMatch(lock, /ait-cmp-template/);
+  assert.match(lock, /my-app%40workspace%3A\./);
+  assert.deepEqual(await readFile(path.join(root, 'wrapper.jar')), f.binary);
+  assert.equal((await lstat(path.join(root, 'gradlew'))).mode & 0o111, 0o111);
+  assert.equal((await readdir(root)).includes('androidApp'), false);
+  assert.match(f.output(), /corepack yarn install --immutable/);
+  assert.doesNotMatch(f.output(), /assembleDebug/);
+});
+
+test('all targets and a parent path containing spaces', async t => {
+  const f = await fixture(t);
+  await mkdir(path.join(f.cwd, 'space here'));
+  assert.equal(await run(['space here/my-app', ...args.slice(1), '--targets=apps-in-toss,android,ios,web'], f.context), 0);
+  const root = path.join(f.cwd, 'space here/my-app');
+  for (const dir of ['androidApp', 'iosApp', 'webApp']) assert.ok((await lstat(path.join(root, dir))).isDirectory());
+  assert.equal(JSON.parse(await readFile(path.join(root, 'package.json'))).scripts['dev:web'], 'web');
+  assert.match(f.output(), /assembleDebug/);
+  assert.match(f.output(), /Xcode/);
+});
+
+test('metadata uses JSON, Kotlin and XML escaping', async t => {
+  const f = await fixture(t);
+  const title = '내 "앱" & <title> \\ $value';
+  const argv = [...args]; argv[argv.indexOf('--display-name') + 1] = title;
+  await run(argv, f.context);
+  const root = path.join(f.cwd, 'my-app');
+  assert.equal(JSON.parse(await readFile(path.join(root, 'package.json'))).title, title);
+  assert.match(await readFile(path.join(root, 'App.kt'), 'utf8'), /\\\$value/);
+  assert.match(await readFile(path.join(root, 'Info.plist'), 'utf8'), /&quot;앱&quot; &amp; &lt;title&gt;/);
+  assert.equal(await readFile(path.join(root, 'project.pbxproj'), 'utf8'), `title = ${JSON.stringify(title)};`);
+  assert.equal(await readFile(path.join(root, 'Title.swift'), 'utf8'), `let title = ${JSON.stringify(title)}`);
+  assert.match(await readFile(path.join(root, 'title.properties'), 'utf8'), /\\ /);
+});
+
+test('nonempty directories and files are preserved', async t => {
+  const f = await fixture(t);
+  const destination = path.join(f.cwd, 'my-app');
+  await mkdir(destination);
+  await writeFile(path.join(destination, 'precious.txt'), 'keep');
+  await assert.rejects(run(args, f.context), /not empty/);
+  assert.equal(await readFile(path.join(destination, 'precious.txt'), 'utf8'), 'keep');
+  assert.deepEqual(await readdir(destination), ['precious.txt']);
+});
+
+test('.git-only and empty directories are accepted', async t => {
+  for (const git of [false, true]) {
+    const f = await fixture(t);
+    await mkdir(path.join(f.cwd, 'my-app'));
+    if (git) await mkdir(path.join(f.cwd, 'my-app/.git'));
+    await run(args, f.context);
+    assert.ok((await lstat(path.join(f.cwd, 'my-app/package.json'))).isFile());
+  }
+});
+
+test('target and ancestor symlinks are refused', async t => {
+  const f = await fixture(t);
+  await mkdir(path.join(f.cwd, 'actual'));
+  await symlink(path.join(f.cwd, 'actual'), path.join(f.cwd, 'my-app'));
+  await assert.rejects(run(args, f.context), /symlink/);
+  await assert.rejects(run(['my-app/child-app', ...args.slice(1)], f.context), /symlink/);
+  assert.deepEqual(await readdir(path.join(f.cwd, 'actual')), []);
+});
+
+test('invalid and missing inputs fail without output files', async t => {
+  const f = await fixture(t);
+  for (const argv of [[], ['my-app'], ['my-app', '--yes'], ['my-app', '--force'], [...args, '--targets', 'android'], [...args, '--targets', 'apps-in-toss,web,web'], [...args, '--package', 'bad']]) {
+    await assert.rejects(run(argv, f.context));
+  }
+  assert.deepEqual(await readdir(f.cwd), ['template']);
+  for (const value of ['io.bad_name.app', 'io.class.app', 'one', 'io.4bad', 'io.good;touch']) assert.throws(() => validate('package', value));
+  assert.throws(() => validate('display-name', 'bad\nname'));
+  assert.throws(() => validate('project', '../escape'));
+  assert.throws(() => parseArgs(['--app-name']));
+  assert.throws(() => parseArgs(['--yes=false']));
+});
+
+test('interactive prompts skip supplied values, retry validation and confirm', async t => {
+  const f = await fixture(t);
+  const questions = [];
+  const answers = ['bad_package', 'io.example.app', 'yes'];
+  f.context.ask = async question => { questions.push(question); return answers.shift(); };
+  await run(['my-app', '--targets', 'apps-in-toss', '--app-name', 'my-app', '--display-name', 'App', '--skip-install'], f.context);
+  assert.equal(questions.length, 3);
+  assert.match(questions[0], /Kotlin package/);
+  assert.match(questions[2], /Create project/);
+  assert.match(f.output(), /Package must/);
+});
+
+test('interactive defaults and cancellation leave no destination', async t => {
+  const f = await fixture(t);
+  let count = 0;
+  f.context.ask = async () => { count++; return ''; };
+  assert.equal(await run(['--skip-install'], f.context), 0);
+  assert.equal(count, 6);
+  assert.deepEqual(await readdir(f.cwd), ['template']);
+  assert.match(f.output(), /Cancelled/);
+});
+
+test('Ctrl+C cancellation before generation leaves no destination', async t => {
+  const f = await fixture(t);
+  f.context.ask = async () => { throw Object.assign(new Error('aborted'), { code: 'ABORT_ERR' }); };
+  assert.equal(await run([], f.context), 130);
+  assert.deepEqual(await readdir(f.cwd), ['template']);
+});
+
+test('installation failure preserves generated files and returns failure', async t => {
+  const f = await fixture(t);
+  f.context.install = async directory => {
+    assert.ok((await lstat(path.join(directory, 'package.json'))).isFile());
+    throw new Error('offline');
+  };
+  assert.equal(await run(args.filter(arg => arg !== '--skip-install'), f.context), 1);
+  assert.match(f.output(), /preserved/);
+  assert.match(f.output(), /Retry corepack yarn install --immutable/);
+});
+
+test('help, version and actual nonTTY entry point', async t => {
+  const f = await fixture(t);
+  await run(['--help'], f.context);
+  await run(['--version'], f.context);
+  assert.match(f.output(), /Usage:/);
+  assert.match(f.output(), /0\.1\.0/);
+  const executable = fileURLToPath(new URL('../cli.js', import.meta.url));
+  const child = spawnSync(process.execPath, [executable, 'my-app'], { cwd: f.cwd, encoding: 'utf8' });
+  assert.equal(child.status, 1);
+  assert.match(child.stderr, /No interactive terminal/);
+});
+
+
+test('npm-style symlink executable runs the CLI', async t => {
+  const f = await fixture(t);
+  const executable = fileURLToPath(new URL('../cli.js', import.meta.url));
+  const link = path.join(f.cwd, 'create-ait-cmp-app');
+  await symlink(executable, link);
+  const child = spawnSync(process.execPath, [link, '--version'], { encoding: 'utf8' });
+  assert.equal(child.status, 0);
+  assert.equal(child.stdout.trim(), '0.1.0');
+});
+
+
+test('Git worktree .git file is allowed and preserved', async t => {
+  const f = await fixture(t);
+  const destination = path.join(f.cwd, 'my-app');
+  await mkdir(destination);
+  await writeFile(path.join(destination, '.git'), 'gitdir: ../existing-worktree\n');
+  assert.equal(await run(args, f.context), 0);
+  assert.equal(await readFile(path.join(destination, '.git'), 'utf8'), 'gitdir: ../existing-worktree\n');
+});
+
+test('non-directory destination and symlink .git are refused', async t => {
+  const f = await fixture(t);
+  const destination = path.join(f.cwd, 'my-app');
+  await writeFile(destination, 'precious');
+  await assert.rejects(run(args, f.context), /not a directory/);
+  assert.equal(await readFile(destination, 'utf8'), 'precious');
+  await rm(destination);
+  await mkdir(destination);
+  await mkdir(path.join(f.cwd, 'git-data'));
+  await symlink(path.join(f.cwd, 'git-data'), path.join(destination, '.git'));
+  await assert.rejects(run(args, f.context), /symlink/);
+  assert.deepEqual(await readdir(path.join(f.cwd, 'git-data')), []);
+});
+
+test('Unicode and markdown punctuation are valid display names but newlines are rejected', async t => {
+  const f = await fixture(t);
+  const title = '앱 👋 "quoted" $value `code` [link](url) <>&';
+  const argv = [...args]; argv[argv.indexOf('--display-name') + 1] = title;
+  assert.equal(await run(argv, f.context), 0);
+  assert.equal(JSON.parse(await readFile(path.join(f.cwd, 'my-app/package.json'))).title, title);
+  for (const value of ['title\nnext', 'title\rnext', 'title\tbad', 'title\0bad']) {
+    assert.throws(() => validate('display-name', value), /control characters/);
+  }
+});
