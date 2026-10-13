@@ -17,7 +17,7 @@ async function fixture(t) {
   const template = path.join(cwd, 'template');
   await mkdir(template);
   await writeFile(path.join(template, 'package.json'), JSON.stringify({ name: '__PROJECT_NAME__', scripts: { dev: 'vite', 'dev:web': 'web', 'build:web': 'web' }, title: '__DISPLAY_NAME__' }));
-  await writeFile(path.join(template, '_yarn.lock'), '"ait-cmp-template@workspace:.":\n  resolution: "ait-cmp-template@workspace:."\n  locator: "ait-cmp-template%40workspace%3A."\n');
+  await writeFile(path.join(template, '_yarn.lock'), '"ait-cmp-template@workspace:.":\n  resolution: "ait-cmp-template@workspace:."\n  locator: "ait-cmp-template%40workspace%3A."\n\n"ajv@npm:6":\n  version: 6.0.0\n\n"zod@npm:4":\n  version: 4.0.0\n');
   await writeFile(path.join(template, 'App.kt'), 'package __PACKAGE_NAME__\n\nimport io.github.sdk.Client\nimport __PACKAGE_NAME__.Model\n\nval title = "__DISPLAY_NAME__"\n');
   await writeFile(path.join(template, 'Info.plist'), '<string>__DISPLAY_NAME__</string>');
   await writeFile(path.join(template, 'Title.swift'), 'let title = "__DISPLAY_NAME__"');
@@ -54,6 +54,8 @@ test('default generation preserves binary and executable, updates npm names and 
   assert.equal(await readFile(path.join(root, '.yarnrc.yml'), 'utf8'), 'nodeLinker: node-modules\n');
   assert.match(lock, /my-app@workspace:\./);
   assert.doesNotMatch(lock, /ait-cmp-template/);
+  assert.ok(lock.indexOf('"ajv@npm:6"') < lock.indexOf('"my-app@workspace:."'));
+  assert.ok(lock.indexOf('"my-app@workspace:."') < lock.indexOf('"zod@npm:4"'));
   assert.match(lock, /my-app%40workspace%3A\./);
   assert.deepEqual(await readFile(path.join(root, 'wrapper.jar')), f.binary);
   assert.equal((await lstat(path.join(root, 'gradlew'))).mode & 0o111, 0o111);
