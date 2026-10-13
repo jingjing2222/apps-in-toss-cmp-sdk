@@ -68,3 +68,10 @@ ESLint 10.12.0, typescript-eslint 8.71.1, ktlint 1.8.0을 적용했습니다. ty
 작업 제한 시간, 같은 ref의 중복 실행 취소, 읽기 전용 저장소 권한, 액션 SHA 고정, PR의 Gradle 캐시 읽기 전용 사용을 설정했습니다. Gradle 캐시는 basic 제공자를 사용합니다. 생성 앱에는 JS 린트와 공통 core JVM 테스트에 맞춘 워크플로를 포함합니다.
 
 `actionlint`로 저장소·템플릿·실제 생성 앱 워크플로를 검사했습니다. 로컬에서 CI의 JS 린트·Node 테스트 26개와 Kotlin 린트·JVM 테스트 8개를 확인했고, 압축 CLI에서 `.github/workflows/ci.yml`이 복원되는 것을 확인했습니다. 실제 실행 상태는 저장소의 Actions 탭에서 확인할 수 있습니다.
+
+
+## 생성 앱 CI 회귀 검사
+
+`Generated app CI`는 main 푸시·main 대상 PR에서 배포용 CLI 압축 패키지로 앱인토스 전용·전체 타깃 앱을 각각 생성합니다. CLI 자동 설치, CI 파일 복원·원본 일치, JS·TS 린트, Kotlin·Gradle 린트, 공통 core JVM 테스트를 검사합니다. 템플릿 사본만 읽는 검사와 달리 패키징부터 생성 앱의 검사 실행까지 확인합니다.
+
+로컬에서 두 조합의 압축 패키지 생성·설치·린트·JVM 테스트와 actionlint 검사를 통과했습니다. 앱인토스 전용 생성 앱은 Android SDK 환경 변수를 제거한 상태에서도 검사했습니다. 생성 README와 워크플로의 원본 일치를 확인했습니다.
