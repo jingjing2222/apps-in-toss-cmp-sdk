@@ -10,20 +10,21 @@
 
 ## 사용
 
-Node 24 이상과 Corepack이 필요합니다. 현재 npm 미배포 상태이므로 저장소 루트에서 실행합니다.
+Node 24 이상과 Corepack이 필요합니다.
 
 ```sh
-yarn template
-node packages/create-ait-cmp-app/cli.js my-app
+corepack enable
+yarn dlx create-ait-cmp-app@alpha my-app
 ```
 
-배포 후에는 `yarn dlx create-ait-cmp-app@alpha my-app`으로 사용할 수 있습니다. 타깃·Kotlin 패키지·콘솔 appName·표시 이름을 질문하고, 생성 전에 요약과 확인을 받습니다. 기본 타깃은 앱인토스만 선택합니다.
+타깃·Kotlin 패키지·콘솔 appName·표시 이름을 질문하고, 생성 전에 요약과 확인을 받습니다. 기본 타깃은 앱인토스만 선택합니다.
 
 자동화 환경에서는 입력값을 명시합니다.
 
 ```sh
-yarn template
-node packages/create-ait-cmp-app/cli.js my-app --yes   --package io.example.myapp --app-name my-app   --display-name '내 앱' --targets apps-in-toss,android,ios,web
+yarn dlx create-ait-cmp-app@alpha my-app --yes \
+  --package io.example.myapp --app-name my-app \
+  --display-name '내 앱' --targets apps-in-toss,android,ios,web
 ```
 
 `--skip-install`로 설치를 생략할 수 있습니다. 기본 설치는 프로젝트에 지정한 Yarn 4의 `install --immutable`을 사용합니다. 기존 파일·비어 있지 않은 경로·심볼릭 링크를 보호하며 덮어쓰기 옵션은 제공하지 않습니다.
