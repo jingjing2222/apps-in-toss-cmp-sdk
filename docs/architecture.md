@@ -31,7 +31,4 @@ globalThis.aitCmpBridge = createBridge(sdk);
 
 공식 SDK의 함수 이름·인자·응답 또는 호스트 프로토콜이 바뀌면 JS 어댑터를 수정해야 합니다. 향후 모든 버전과의 무조건적인 호환은 보장할 수 없습니다. 다른 메이저 버전은 호환 여부를 확인한 뒤 지원 범위를 넓히거나, 같은 브리지 계약을 제공하는 별도 어댑터를 주입합니다. 기능 존재 검사만으로 응답 의미의 변경까지 감지할 수는 없습니다.
 
-
-## JavaScript 개발 도구
-
-저장소와 생성 앱은 `packageManager: yarn@4.18.1`, `yarn.lock`, `.yarnrc.yml`을 사용합니다. 기존 번들 스크립트가 `node_modules` 경로를 사용하므로 `nodeLinker: node-modules`를 선택했습니다. CLI는 Corepack으로 프로젝트의 Yarn 버전을 선택해 `yarn install --immutable`을 실행합니다. Kotlin/JS·Wasm 빌드가 내부적으로 내려받는 패키지 관리 도구는 Gradle 플러그인이 관리하며, 프로젝트 루트의 Yarn 4 설정과 별개입니다.
+개발 도구·검사·템플릿 유지보수는 [개발 가이드](development.md), 지원 버전은 [호환성](compatibility.md)을 참고하세요.
