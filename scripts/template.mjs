@@ -2,7 +2,7 @@ import { cp, mkdir, readFile, writeFile, rm, readdir, chmod, rename } from 'node
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
-import {getNpmTag} from './release-version.mjs';
+import { getNpmTag } from './release-version.mjs';
 const root = process.cwd();
 const releaseVersion = process.env.RELEASE_VERSION;
 if (releaseVersion) getNpmTag(releaseVersion);

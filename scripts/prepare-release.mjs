@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {getNpmTag} from './release-version.mjs';
+import { getNpmTag } from './release-version.mjs';
 import {readFile, writeFile, access, readdir} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {join, resolve} from 'node:path';

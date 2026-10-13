@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {getNpmTag} from '../release-version.mjs';
+import { getNpmTag } from '../release-version.mjs';
 
 test('stable releases use latest; prereleases stay on their own npm channel',()=>{
   for (const [version,channel] of [['1.0.0','latest'],['1.0.0-alpha01','alpha'],['1.0.0-beta02','beta'],['1.0.0-rc01','rc']]) assert.equal(getNpmTag(version),channel);
