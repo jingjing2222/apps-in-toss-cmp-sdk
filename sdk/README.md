@@ -19,7 +19,7 @@
 
 ## 연결과 수명
 
-저장소에서는 `implementation(project(":sdk"))`로 참조합니다. 생성 앱에는 로컬 Maven 바이너리가 포함됩니다. 아직 원격 Maven에 배포하지 않았습니다.
+저장소에서는 `implementation(project(":sdk"))`로 참조합니다. 로컬 개발 템플릿에는 Maven 바이너리가 포함되고, 정식 배포 템플릿은 Maven Central 좌표를 참조하도록 구성했습니다. 아직 원격 Maven에 실제 게시하지 않았습니다.
 
 웹 빌드가 SDK의 `web-resources` JAR를 추출하고 CMP 진입점보다 먼저 JS 브리지를 초기화합니다. 별도 npm 브리지 설치는 필요하지 않습니다. UI 호스트마다 클라이언트 하나를 소유합니다. API와 `close()`는 호스트 UI 스레드에서 호출합니다. 호스트 해제 시 `close()`를 호출해야 합니다. 연결 예제는 [앱인토스 진입점](../sample/appsInTossApp/src/webMain/kotlin/Main.kt)에 있습니다.
 

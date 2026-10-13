@@ -82,3 +82,11 @@ ESLint 10.12.0, typescript-eslint 8.71.1, ktlint 1.8.0을 적용했습니다. ty
 압축한 CLI로 앱인토스 전용·전체 타깃 프로젝트를 생성해 Yarn immutable 설치, 린트와 공통 core JVM 테스트를 확인했습니다. 두 프로젝트의 직접 npm 런타임 의존성은 공식 웹 프레임워크 하나이며, 추출한 core·운영·mock 리소스가 SDK 원본과 일치했습니다. Maven 체크섬과 생성 CI 원본 일치도 확인했습니다. 앱인토스 전용 앱은 Android SDK 환경 변수 없이 JS/Wasm 호환 배포물과 `.ait` 생성을 통과했습니다.
 
 `Generated app CI`에 두 생성 조합의 SDK 리소스 추출·내용 일치와 의존성 검사를 추가했습니다. `actionlint`와 문서의 로컬 링크 검사도 통과했습니다. 이번 변경에서 Android·iOS 빌드, 브라우저 UI, 실제 토스앱 실행과 TDS 검수 승인은 확인하지 않았습니다.
+
+## npm·Maven CD 설정 (2026-10-14)
+
+Node 24·Yarn 4.18.1·JDK 17 환경에서 정식 버전 `0.1.0`·`0.1.1`의 로컬 Maven publication과 CLI 압축 파일을 생성했습니다. 정식 CLI 배포물에 `vendor/`가 없고, `0.1.1` CLI의 버전 출력과 생성 앱의 SDK·JS 리소스 좌표가 일치했습니다. 생성 앱의 immutable 설치·JS 린트·Kotlin 린트·JVM 테스트·리소스 추출이 통과했습니다. 저장소의 Node 테스트 27개와 JVM 테스트 8개도 통과했습니다.
+
+임시 PGP 테스트 키로 Maven 서명 22개를 만들고 검증했습니다. 내부 JS 리소스 서명도 포함되며 테스트 키는 폐기했습니다. Central 게시 태스크는 `--dry-run`, npm 게시 명령은 `--dry-run`으로 확인했습니다. `actionlint`, 문서 로컬 링크, 로컬 개발 템플릿 복원과 Maven 체크섬도 확인했습니다.
+
+실제 npm·Maven 게시, 실사용 서명 키, GitHub OIDC 인증과 원격 CD 실행은 검증하지 않았습니다. 네임스페이스·토큰·Trusted Publisher 설정은 별도로 필요합니다. Android·iOS·브라우저 UI 검사는 이번 배포 설정에서 반복하지 않았습니다.

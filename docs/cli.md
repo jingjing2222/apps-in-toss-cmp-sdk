@@ -18,7 +18,7 @@ yarn dlx create-ait-cmp-app my-app
 yarn dlx create-ait-cmp-app my-app --targets apps-in-toss,android,ios,web
 ```
 
-선택하지 않은 호스트의 디렉터리는 생성하지 않습니다. 공통 Gradle 모듈은 생성된 호스트 디렉터리를 기준으로 플랫폼 타깃을 활성화합니다. 현재 미배포 버전은 JS 리소스를 포함한 로컬 SDK Maven 바이너리를 생성 앱에 포함합니다. SDK 구현 소스는 복사하지 않습니다. 이후 배포 버전에서는 정식 의존성 좌표로 대체할 예정입니다.
+선택하지 않은 호스트의 디렉터리는 생성하지 않습니다. 공통 Gradle 모듈은 생성된 호스트 디렉터리를 기준으로 플랫폼 타깃을 활성화합니다. 로컬 개발 템플릿은 JS 리소스를 포함한 SDK Maven 바이너리를 생성 앱에 포함합니다. 정식 npm 배포 템플릿은 같은 버전의 Maven Central 좌표를 사용하므로 `vendor/`가 없습니다. SDK 구현 소스는 앱 소스로 복사하지 않습니다. 배포 대상과 절차는 [출시 준비](release.md)를 참고하세요.
 
 ## 자동화 환경에서 생성
 
