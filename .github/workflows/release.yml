@@ -171,11 +171,7 @@ jobs:
             --max-time 30 --head "$base/apps-in-toss-sdk/$RELEASE_VERSION/apps-in-toss-sdk-$RELEASE_VERSION-web-resources.jar" > /dev/null
       - name: npm 배포
         working-directory: build/npm-publish/package
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # 첫 배포에만 토큰을 사용할 수 있다. 이후에는 npm Trusted Publisher를 설정하고 토큰을 제거한다.
-          if [ -n "$NPM_TOKEN" ]; then export YARN_NPM_AUTH_TOKEN="$NPM_TOKEN"; fi
           touch yarn.lock
           corepack yarn install --no-immutable --mode=skip-build
           corepack yarn npm publish --access public --tag "$NPM_TAG" --no-provenance --tolerate-republish
