@@ -46,7 +46,7 @@ mavenPublishing {
     publishToMavenCentral()
     pom {
         name.set("Apps in Toss Compose Multiplatform SDK")
-        description.set("Kotlin JS and Wasm APIs for Apps in Toss, including internal JavaScript bridge resources.")
+        description.set("Bring CMP to Apps in Toss")
         url.set("https://github.com/l2hyunwoo/apps-in-toss-cmp-sdk")
         licenses {
             license {
