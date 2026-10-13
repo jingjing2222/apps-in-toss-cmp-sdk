@@ -9,7 +9,7 @@
     "packages/create-ait-cmp-app"
   ],
   "scripts": {
-    "test": "node scripts/check-boundaries.mjs && node --test sdk/test/*.test.mjs && yarn workspace create-ait-cmp-app test",
+    "test": "node scripts/check-boundaries.mjs && node --test sdk/test/*.test.mjs scripts/test/*.test.mjs && yarn workspace create-ait-cmp-app test",
     "dev": "node scripts/web.mjs dev",
     "dev:toss": "node scripts/web.mjs dev:toss",
     "build": "node scripts/web.mjs build",
@@ -19,7 +19,8 @@
     "lint": "yarn lint:js && yarn lint:kotlin",
     "lint:js": "eslint . --max-warnings=0",
     "lint:kotlin": "node scripts/lint-kotlin.mjs",
-    "lint:fix": "yarn lint:js --fix && yarn lint:kotlin --fix"
+    "lint:fix": "yarn lint:js --fix && yarn lint:kotlin --fix",
+    "release:prepare": "node scripts/prepare-release.mjs"
   },
   "dependencies": {
     "@apps-in-toss/web-framework": "3.8.0"

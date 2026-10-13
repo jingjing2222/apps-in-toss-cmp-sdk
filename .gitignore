@@ -9,3 +9,4 @@ local.properties
 **/xcuserdata/
 kotlin-js-store/
 .yarn/
+packages/create-ait-cmp-app/templates/app/vendor/

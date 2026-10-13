@@ -176,7 +176,7 @@ test('help, version and actual nonTTY entry point', async t => {
   await run(['--help'], f.context);
   await run(['--version'], f.context);
   assert.match(f.output(), /Usage:/);
-  assert.match(f.output(), /0\.1\.0/);
+  assert.ok(f.output().includes(JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version));
   const executable = fileURLToPath(new URL('../cli.js', import.meta.url));
   const child = spawnSync(process.execPath, [executable, 'my-app'], { cwd: f.cwd, encoding: 'utf8' });
   assert.equal(child.status, 1);
@@ -191,7 +191,7 @@ test('npm-style symlink executable runs the CLI', async t => {
   await symlink(executable, link);
   const child = spawnSync(process.execPath, [link, '--version'], { encoding: 'utf8' });
   assert.equal(child.status, 0);
-  assert.equal(child.stdout.trim(), '0.1.0');
+  assert.equal(child.stdout.trim(), JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8')).version);
 });
 
 

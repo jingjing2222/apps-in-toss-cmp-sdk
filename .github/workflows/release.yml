@@ -1,0 +1,181 @@
+name: Package release
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '검증할 버전 (업로드하지 않음, 예: 1.0.0-alpha01)'
+        required: true
+        default: '1.0.0-alpha01'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'push' && 'publish' || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: 배포물 검증
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      npm_tag: ${{ steps.version.outputs.npm_tag }}
+    env:
+      RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: 버전·배포 커밋 확인
+        id: version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = push ]; then
+            RELEASE_VERSION="${RELEASE_VERSION#v}"
+            git merge-base --is-ancestor HEAD origin/main
+          elif [ "$EVENT_NAME" = pull_request ]; then
+            RELEASE_VERSION="$(node -p "require('./packages/create-ait-cmp-app/package.json').version")"
+          fi
+          export RELEASE_VERSION
+          NPM_TAG=$(node --input-type=module -e 'import {getNpmTag} from "./scripts/release-version.mjs"; console.log(getNpmTag(process.env.RELEASE_VERSION));')
+          echo "RELEASE_VERSION=$RELEASE_VERSION" >> "$GITHUB_ENV"
+          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "npm_tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          cache-read-only: true
+      - name: Yarn 4·의존성 설치
+        run: |
+          corepack enable
+          yarn install --immutable
+      - name: 린트·계약 테스트
+        run: |
+          yarn lint:js
+          yarn test
+          ./gradlew ktlintCheck :sdk:jvmTest :sample:shared-core:jvmTest --no-daemon --console=plain
+      - name: Maven·npm 배포물 생성 및 검사
+        run: |
+          yarn release:prepare "$RELEASE_VERSION"
+          tar -czf "build/maven-$RELEASE_VERSION.tgz" -C build/template-maven .
+          mkdir -p build/npm-publish
+          tar -xzf "build/create-ait-cmp-app-$RELEASE_VERSION.tgz" -C build/npm-publish
+          test ! -d build/npm-publish/package/templates/app/vendor
+          test "$(node build/npm-publish/package/cli.js --version)" = "$RELEASE_VERSION"
+          node build/npm-publish/package/cli.js build/release-smoke --yes --skip-install \
+            --package io.example.release --app-name release-smoke --display-name '배포 검사'
+          # Maven Central에 공개되기 전에는 로컬 배포물로 생성 앱의 리소스 연결을 검사한다.
+          cp -R build/template-maven build/release-smoke/vendor-maven
+          sed -i '/repositories {/a\        maven { url = uri("vendor-maven") }' build/release-smoke/settings.gradle.kts
+          cd build/release-smoke
+          corepack yarn install --immutable
+          corepack yarn lint:js
+          ./gradlew ktlintCheck :shared-core:jvmTest :appsInTossApp:prepareAppsInTossBridge --no-daemon --console=plain
+          for file in core index mock; do
+            cmp "../../sdk/src/webMain/resources/ait-cmp-bridge/$file.mjs" "appsInTossApp/build/ait-cmp-sdk/ait-cmp-bridge/$file.mjs"
+          done
+      - name: 검사한 배포물 보관
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: packages-${{ env.RELEASE_VERSION }}
+          path: |
+            build/create-ait-cmp-app-*.tgz
+            build/maven-*.tgz
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Maven Central·npm 배포
+    if: github.event_name == 'push'
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+      NPM_TAG: ${{ needs.prepare.outputs.npm_tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+          cache-read-only: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: packages-${{ env.RELEASE_VERSION }}
+          path: build/release-artifacts
+      - name: 검사한 npm 패키지 준비
+        run: |
+          corepack enable
+          mkdir -p build/npm-publish
+          tar -xzf "build/release-artifacts/create-ait-cmp-app-$RELEASE_VERSION.tgz" -C build/npm-publish
+      - name: Maven Central 배포
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+        run: |
+          url="https://repo.maven.apache.org/maven2/io/github/l2hyunwoo/apps-in-toss-sdk/$RELEASE_VERSION/apps-in-toss-sdk-$RELEASE_VERSION.pom"
+          if curl --fail --silent --head "$url" > /dev/null; then
+            echo '이미 공개된 Maven 버전: npm 배포 재시도를 진행합니다.'
+          else
+            : "${ORG_GRADLE_PROJECT_mavenCentralUsername:?MAVEN_CENTRAL_USERNAME is required}"
+            : "${ORG_GRADLE_PROJECT_mavenCentralPassword:?MAVEN_CENTRAL_PASSWORD is required}"
+            : "${ORG_GRADLE_PROJECT_signingInMemoryKey:?SIGNING_IN_MEMORY_KEY is required}"
+            ./gradlew :sdk:publishAndReleaseToMavenCentral "-PreleaseVersion=$RELEASE_VERSION" \
+              -PsignAllPublications=true --no-daemon --console=plain
+          fi
+      - name: Maven 공개 확인
+        run: |
+          base="https://repo.maven.apache.org/maven2/io/github/l2hyunwoo"
+          for artifact in apps-in-toss-sdk apps-in-toss-sdk-js apps-in-toss-sdk-wasmjs apps-in-toss-sdk-jvm; do
+            extension=jar
+            case "$artifact" in *-js|*-wasmjs) extension=klib ;; esac
+            for file in pom module "$extension"; do
+              curl --fail --silent --show-error --retry 90 --retry-delay 20 --retry-all-errors \
+                --max-time 30 --head "$base/$artifact/$RELEASE_VERSION/$artifact-$RELEASE_VERSION.$file" > /dev/null
+            done
+          done
+          curl --fail --silent --show-error --retry 90 --retry-delay 20 --retry-all-errors \
+            --max-time 30 --head "$base/apps-in-toss-sdk/$RELEASE_VERSION/apps-in-toss-sdk-$RELEASE_VERSION-web-resources.jar" > /dev/null
+      - name: npm 배포
+        working-directory: build/npm-publish/package
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # 첫 배포에만 토큰을 사용할 수 있다. 이후에는 npm Trusted Publisher를 설정하고 토큰을 제거한다.
+          if [ -n "$NPM_TOKEN" ]; then export YARN_NPM_AUTH_TOKEN="$NPM_TOKEN"; fi
+          touch yarn.lock
+          corepack yarn install --no-immutable --mode=skip-build
+          corepack yarn npm publish --access public --tag "$NPM_TAG" --no-provenance --tolerate-republish

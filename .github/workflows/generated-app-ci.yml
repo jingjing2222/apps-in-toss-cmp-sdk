@@ -52,6 +52,8 @@ jobs:
         run: corepack enable
       - name: SDK 저장소 의존성 설치
         run: yarn install --immutable
+      - name: 로컬 SDK와 템플릿 생성
+        run: yarn template
       - name: 배포용 CLI 패키지에서 앱 생성
         run: |
           mkdir -p "$CLI_DIR"
