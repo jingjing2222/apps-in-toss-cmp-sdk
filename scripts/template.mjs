@@ -3,12 +3,15 @@ import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 const root = process.cwd();
+const releaseVersion = process.env.RELEASE_VERSION;
+if (releaseVersion && !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(releaseVersion)) throw Error('RELEASE_VERSION must be a stable version such as 0.1.0');
+const sdkVersion = releaseVersion ?? '0.1.0-SNAPSHOT';
 function run(command,args) {
   const r=spawnSync(command,args,{cwd:root,stdio:'inherit',shell:process.platform==='win32'});
   if(r.error)throw r.error;if(r.status!==0)process.exit(r.status??1);
 }
 await rm(join(root,'build/template-maven'),{recursive:true,force:true});
-run(process.platform==='win32'?'gradlew.bat':'./gradlew',[':sdk:publishAllPublicationsToTemplateRepository','--console=plain']);
+run(process.platform==='win32'?'gradlew.bat':'./gradlew',[':sdk:publishAllPublicationsToTemplateRepository', ...(releaseVersion ? [`-PreleaseVersion=${releaseVersion}`] : []), '--console=plain']);
 const dest=join(root,'packages/create-ait-cmp-app/templates/app');
 await rm(dest,{recursive:true,force:true});await mkdir(dest,{recursive:true});
 for(const file of ['LICENSE','.editorconfig','eslint.config.mjs','scripts/lint-kotlin.mjs','.yarnrc.yml','licenses','gradlew','gradlew.bat','gradle','gradle.properties','build.gradle.kts','scripts/web.mjs']) {
@@ -25,7 +28,7 @@ await writeFile(join(dest,'_github/workflows/ci.yml'),ci);
 for(const module of ['shared-core','shared-ui','appsInTossApp','webApp','androidApp','iosApp']) {
   await cp(join(root,'sample',module),join(dest,module),{recursive:true,filter:p=>!p.split('/').some(s=>['build','.gradle','xcuserdata'].includes(s))});
 }
-await cp('build/template-maven',join(dest,'vendor/maven'),{recursive:true,filter:p=>!p.includes('-sources.jar')});
+if (!releaseVersion) await cp('build/template-maven',join(dest,'vendor/maven'),{recursive:true,filter:p=>!p.includes('-sources.jar')});
 // The template ships binaries only; do not advertise omitted sources to Maven consumers.
 async function stripSourceMetadata(directory) {
   for (const e of await readdir(directory, {withFileTypes:true})) {
@@ -48,7 +51,7 @@ async function stripSourceMetadata(directory) {
     }
   }
 }
-await stripSourceMetadata(join(dest, 'vendor/maven'));
+if (!releaseVersion) await stripSourceMetadata(join(dest, 'vendor/maven'));
 const tooling=JSON.parse(await readFile('package.json','utf8'));
 const lintScripts=Object.fromEntries(Object.entries(tooling.scripts).filter(([name])=>name.startsWith('lint')));
 const lintDependencies=Object.fromEntries(Object.entries(tooling.devDependencies).filter(([name])=>name!=='toss-sdk-min'));
@@ -63,8 +66,7 @@ await writeFile(join(dest,'settings.gradle.kts'),`pluginManagement {
 }
 dependencyResolutionManagement {
     repositories {
-        maven { url = uri("vendor/maven") }
-        google()
+${releaseVersion ? '' : '        maven { url = uri("vendor/maven") }\n'}        google()
         mavenCentral()
     }
 }
@@ -128,7 +130,7 @@ yarn build
 
 \`build\`는 실제 브리지를 포함한 \`__APP_NAME__.ait\`를 만듭니다. 업로드 전에 \`apps-in-toss.config.ts\`의 appName·브랜드·권한 등 필수 정보를 콘솔과 맞춥니다. 콘솔 등록·업로드는 자동으로 수행하지 않습니다.
 
-생성 앱의 직접 npm 런타임 의존성은 \`@apps-in-toss/web-framework\` 하나입니다. JS 브리지는 Kotlin SDK와 같은 버전의 Maven 리소스에 포함되며 웹 빌드가 자동으로 추출합니다. 별도 npm 브리지 설치는 필요하지 않습니다. TDS는 기본 포함하지 않으며, 사용하려면 앱인토스 호스트에 React/DOM 화면과 관련 의존성을 연결해야 합니다.
+생성 앱의 직접 npm 런타임 의존성은 \`@apps-in-toss/web-framework\` 하나입니다. JS 브리지는 Kotlin SDK와 같은 버전의 Maven 리소스에 포함되며 웹 빌드가 자동으로 추출합니다. 별도 npm 브리지 설치는 필요하지 않습니다. 정식 CLI 배포물은 같은 버전의 SDK를 Maven Central에서 가져오고, 로컬 개발용 CLI는 \`vendor/maven\`에 SDK를 포함합니다. TDS는 기본 포함하지 않으며, 사용하려면 앱인토스 호스트에 React/DOM 화면과 관련 의존성을 연결해야 합니다.
 
 ## 선택한 플랫폼 실행
 
@@ -167,8 +169,8 @@ async function transform(directory) {
     if(!/\.(kt|kts|swift|pbxproj|xml|html|yml|md)$/.test(p))continue;
     let s=await readFile(p,'utf8');
     s=s.replaceAll(':sample:',':').replaceAll('io.github.l2hyunwoo.ait.sample','__PACKAGE_NAME__');
-    s=s.replaceAll('implementation(project(":sdk"))','implementation("io.github.l2hyunwoo:apps-in-toss-sdk:0.1.0-SNAPSHOT")');
-    s=s.replaceAll('project(mapOf("path" to ":sdk", "configuration" to "webBridgeResources"))', '"io.github.l2hyunwoo:apps-in-toss-sdk:0.1.0-SNAPSHOT:web-resources@jar"');
+    s=s.replaceAll('implementation(project(":sdk"))',`implementation("io.github.l2hyunwoo:apps-in-toss-sdk:${sdkVersion}")`);
+    s=s.replaceAll('project(mapOf("path" to ":sdk", "configuration" to "webBridgeResources"))', `"io.github.l2hyunwoo:apps-in-toss-sdk:${sdkVersion}:web-resources@jar"`);
     s=s.replaceAll('rootProject.file("sample/', 'rootProject.file("');
     if(p.endsWith('.pbxproj')) {
       s=s.replaceAll('PRODUCT_BUNDLE_IDENTIFIER = __PACKAGE_NAME__;','PRODUCT_BUNDLE_IDENTIFIER = "__PACKAGE_NAME__";');

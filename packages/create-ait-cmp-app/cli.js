@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline/promises';
 import { spawn } from 'node:child_process';
 
-const VERSION = '0.1.0';
+const {version: VERSION} = JSON.parse(await readFile(new URL('./package.json', import.meta.url), 'utf8'));
 const TARGETS = ['apps-in-toss', 'android', 'ios', 'web'];
 const TEMPLATE = fileURLToPath(new URL('./templates/app/', import.meta.url));
 const HELP = `Usage: create-ait-cmp-app [directory] [options]
