@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict';
+import {getNpmTag} from './release-version.mjs';
 import {readFile, writeFile, access, readdir} from 'node:fs/promises';
 import {spawnSync} from 'node:child_process';
 import {join, resolve} from 'node:path';
 
 const version = process.argv[2];
-assert.match(version ?? '', /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/, 'Use a stable release version such as 0.1.0');
+getNpmTag(version);
 function run(command, args, env = process.env) {
   const result = spawnSync(command, args, {stdio:'inherit', env, shell:process.platform === 'win32'});
   if (result.error) throw result.error;

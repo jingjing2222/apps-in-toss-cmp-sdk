@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.maven.publish)
 }
 group = "io.github.l2hyunwoo"
-version = providers.gradleProperty("releaseVersion").getOrElse("0.1.0-SNAPSHOT")
+version = providers.gradleProperty("releaseVersion").orElse(providers.gradleProperty("sdkVersion")).get()
 kotlin {
     jvm()
     js { browser() }

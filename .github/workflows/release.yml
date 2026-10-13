@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: '검증할 정식 버전 (업로드하지 않음, 예: 0.1.0)'
+        description: '검증할 버전 (업로드하지 않음, 예: 1.0.0-alpha01)'
         required: true
-        default: '0.1.0'
+        default: '1.0.0-alpha01'
         type: string
 
 permissions:
@@ -27,8 +27,9 @@ jobs:
     timeout-minutes: 20
     outputs:
       version: ${{ steps.version.outputs.version }}
+      npm_tag: ${{ steps.version.outputs.npm_tag }}
     env:
-      RELEASE_VERSION: ${{ inputs.version || (github.event_name == 'pull_request' && '0.0.0') || github.ref_name }}
+      RELEASE_VERSION: ${{ inputs.version || github.ref_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -42,11 +43,14 @@ jobs:
           if [ "$EVENT_NAME" = push ]; then
             RELEASE_VERSION="${RELEASE_VERSION#v}"
             git merge-base --is-ancestor HEAD origin/main
+          elif [ "$EVENT_NAME" = pull_request ]; then
+            RELEASE_VERSION="$(node -p "require('./packages/create-ait-cmp-app/package.json').version")"
           fi
           export RELEASE_VERSION
-          node --input-type=module -e 'import assert from "node:assert/strict"; assert.match(process.env.RELEASE_VERSION, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);'
+          NPM_TAG=$(node --input-type=module -e 'import {getNpmTag} from "./scripts/release-version.mjs"; console.log(getNpmTag(process.env.RELEASE_VERSION));')
           echo "RELEASE_VERSION=$RELEASE_VERSION" >> "$GITHUB_ENV"
           echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "npm_tag=$NPM_TAG" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '24'
@@ -109,6 +113,7 @@ jobs:
       id-token: write
     env:
       RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+      NPM_TAG: ${{ needs.prepare.outputs.npm_tag }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -173,4 +178,4 @@ jobs:
           if [ -n "$NPM_TOKEN" ]; then export YARN_NPM_AUTH_TOKEN="$NPM_TOKEN"; fi
           touch yarn.lock
           corepack yarn install --no-immutable --mode=skip-build
-          corepack yarn npm publish --access public --no-provenance --tolerate-republish
+          corepack yarn npm publish --access public --tag "$NPM_TAG" --no-provenance --tolerate-republish

@@ -2,10 +2,11 @@ import { cp, mkdir, readFile, writeFile, rm, readdir, chmod, rename } from 'node
 import { spawnSync } from 'node:child_process';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
+import {getNpmTag} from './release-version.mjs';
 const root = process.cwd();
 const releaseVersion = process.env.RELEASE_VERSION;
-if (releaseVersion && !/^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/.test(releaseVersion)) throw Error('RELEASE_VERSION must be a stable version such as 0.1.0');
-const sdkVersion = releaseVersion ?? '0.1.0-SNAPSHOT';
+if (releaseVersion) getNpmTag(releaseVersion);
+const sdkVersion = releaseVersion ?? JSON.parse(await readFile('packages/create-ait-cmp-app/package.json','utf8')).version;
 function run(command,args) {
   const r=spawnSync(command,args,{cwd:root,stdio:'inherit',shell:process.platform==='win32'});
   if(r.error)throw r.error;if(r.status!==0)process.exit(r.status??1);
@@ -17,7 +18,8 @@ await rm(dest,{recursive:true,force:true});await mkdir(dest,{recursive:true});
 for(const file of ['LICENSE','.editorconfig','eslint.config.mjs','scripts/lint-kotlin.mjs','.yarnrc.yml','licenses','gradlew','gradlew.bat','gradle','gradle.properties','build.gradle.kts','scripts/web.mjs']) {
   await cp(join(root,file),join(dest,file),{recursive:true});
 }
-await cp('.gitignore',join(dest,'_gitignore'));
+await writeFile(join(dest,'_gitignore'), (await readFile('.gitignore','utf8')).replace('packages/create-ait-cmp-app/templates/app/vendor/\n',''));
+await writeFile(join(dest,'gradle.properties'), (await readFile('gradle.properties','utf8')).replace(/^sdkVersion=.*\r?\n?/gm,'').trimEnd()+'\n');
 // Yarn pack omits .github; restore the directory name when scaffolding.
 await mkdir(join(dest,'_github/workflows'),{recursive:true});
 const ci=(await readFile('.github/workflows/ci.yml','utf8'))

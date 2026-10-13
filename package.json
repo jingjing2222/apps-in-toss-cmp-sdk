@@ -9,7 +9,7 @@
     "packages/create-ait-cmp-app"
   ],
   "scripts": {
-    "test": "node scripts/check-boundaries.mjs && node --test sdk/test/*.test.mjs && yarn workspace create-ait-cmp-app test",
+    "test": "node scripts/check-boundaries.mjs && node --test sdk/test/*.test.mjs scripts/test/*.test.mjs && yarn workspace create-ait-cmp-app test",
     "dev": "node scripts/web.mjs dev",
     "dev:toss": "node scripts/web.mjs dev:toss",
     "build": "node scripts/web.mjs build",
