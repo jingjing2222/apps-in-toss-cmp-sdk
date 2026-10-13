@@ -74,7 +74,7 @@ yarn test
 
 JS·TS는 ESLint 10과 typescript-eslint로, Kotlin 소스·Gradle 스크립트는 ktlint 1.8.0으로 검사합니다. `yarn lint:js`, `yarn lint:kotlin`로 따로 검사하거나 `yarn lint:fix`로 자동 수정할 수 있습니다. Kotlin 검사에는 JDK 17이 필요합니다. 생성 CLI의 템플릿에도 같은 설정을 포함합니다. 빌드 산출물·외부 바이너리·템플릿 사본은 중복 검사하지 않습니다.
 
-GitHub Actions는 `main` 푸시와 `main` 대상 PR에서 JS·Kotlin 린트와 테스트를 병렬로 실행합니다. JS 브리지·CLI 테스트와 SDK·공통 core JVM 계약 테스트가 대상이며, 같은 PR의 이전 실행은 새 커밋이 올라오면 취소됩니다. Android·iOS 빌드와 브라우저 실행 검사는 이 CI에 포함하지 않습니다.
+GitHub Actions는 `main` 푸시와 `main` 대상 PR에서 JS·Kotlin 린트와 테스트를 병렬로 실행합니다. JS 브리지·CLI 테스트와 SDK·공통 core JVM 계약 테스트가 대상이며, 같은 PR의 이전 실행은 새 커밋이 올라오면 취소됩니다. 별도의 `Generated app CI`는 배포용 CLI 압축 패키지에서 앱인토스 전용·전체 타깃 앱을 생성해 각 앱의 린트·공통 core 테스트와 CI 파일 복원을 검사합니다. Android·iOS 빌드와 브라우저 실행 검사는 이 CI에 포함하지 않습니다.
 
 2026-10-13 기준 최신 안정 버전인 Kotlin 2.4.21, Compose Multiplatform 1.12.1, Gradle 9.8.1, AGP 9.4.1을 사용합니다. Material3는 별도 버전인 1.9.0입니다. 버전은 `gradle/libs.versions.toml`과 Gradle Wrapper에서 관리합니다.
 

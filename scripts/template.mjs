@@ -91,7 +91,11 @@ Node 24 이상, Corepack, JDK 17이 필요합니다. Yarn 4.18.1을 사용하며
 
 \`yarn lint\`로 JS·TS와 Kotlin·Gradle 스크립트를 검사하고, \`yarn lint:fix\`로 자동 수정합니다. Kotlin 검사에는 JDK 17이 필요합니다.
 
-생성된 \`.github/workflows/ci.yml\`은 main 푸시와 main 대상 PR에서 JS·TS 린트, Kotlin 린트·공통 core JVM 테스트를 실행합니다.
+## GitHub Actions CI
+
+기본 CI는 \`.github/workflows/ci.yml\`에 포함됩니다. 생성한 앱을 GitHub 저장소에 커밋하고 \`main\`에 푸시하면 실행되며, \`main\` 대상 PR에서도 실행됩니다. 별도의 secret 설정은 필요하지 않습니다.
+
+JS·TS 린트와 Kotlin·Gradle 린트, 공통 core JVM 테스트를 실행합니다. Android·iOS·웹 타깃 선택 여부와 관계없이 사용할 수 있습니다. 서비스별 JS 테스트나 Android·iOS 빌드는 필요한 시점에 추가합니다.
 
 ## 선택한 플랫폼 실행
 
